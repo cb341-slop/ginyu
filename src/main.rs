@@ -6,9 +6,28 @@ mod commands;
 
 use commands::*;
 
+#[derive(Debug, Clone)]
+pub struct OutputModifiers {
+    pub group: bool,
+    pub oneline: bool,
+    pub count: bool,
+}
+
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
 struct Cli {
+    /// Group output by file type
+    #[arg(short = 'g', long = "group", global = true)]
+    group: bool,
+    
+    /// Show oneline/condensed output
+    #[arg(short = '1', long = "oneline", global = true)]
+    oneline: bool,
+    
+    /// Show only count of files
+    #[arg(short = 'c', long = "count", global = true)]
+    count: bool,
+    
     #[command(subcommand)]
     command: Commands,
 }
@@ -16,19 +35,19 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Show added but not staged files
-    #[command(alias = "a")]
+    #[command(alias = "a", visible_alias = "a")]
     Added,
     
     /// Show modified but not staged files
-    #[command(alias = "m")]
+    #[command(alias = "m", visible_alias = "m")]
     Modified,
     
     /// Show all unstaged files
-    #[command(alias = "u")]
+    #[command(alias = "u", visible_alias = "u")]
     Unstaged,
     
     /// Show files different from branch
-    #[command(alias = "bf")]
+    #[command(alias = "bf", visible_alias = "bf")]
     BranchFiles {
         /// Target branch to compare against
         #[arg(default_value = "main")]
@@ -36,7 +55,7 @@ enum Commands {
     },
     
     /// Group files by type
-    #[command(alias = "g")]
+    #[command(alias = "g", visible_alias = "g")]
     Group {
         /// Show condensed oneline format
         #[arg(long)]
@@ -44,25 +63,25 @@ enum Commands {
     },
     
     /// Show diff for file set
-    #[command(alias = "d")]
+    #[command(alias = "d", visible_alias = "d")]
     Diff {
         /// File command to diff (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Show diff of staged files
-    #[command(alias = "ds")]
+    #[command(alias = "ds", visible_alias = "ds")]
     DiffStaged,
     
     /// Show diff for specific file
-    #[command(alias = "df")]
+    #[command(alias = "df", visible_alias = "df")]
     DiffFile {
         /// File path to diff
         file: String,
     },
     
     /// Run tool on file set
-    #[command(alias = "r")]
+    #[command(alias = "r", visible_alias = "r")]
     Run {
         /// Tool to run
         tool: String,
@@ -71,35 +90,35 @@ enum Commands {
     },
     
     /// Run prettier on file set
-    #[command(alias = "p")]
+    #[command(alias = "p", visible_alias = "p")]
     Prettier {
         /// File command (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Run formatter on file set
-    #[command(alias = "f")]
+    #[command(alias = "f", visible_alias = "f")]
     Format {
         /// File command (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Run linter on file set
-    #[command(alias = "l")]
+    #[command(alias = "l", visible_alias = "l")]
     Lint {
         /// File command (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Run rubocop on file set
-    #[command(alias = "rb")]
+    #[command(alias = "rb", visible_alias = "rb")]
     Rubocop {
         /// File command (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Run eslint on file set
-    #[command(alias = "es")]
+    #[command(alias = "es", visible_alias = "es")]
     Eslint {
         /// File command (added, modified, etc.)
         file_command: Option<String>,
@@ -109,12 +128,26 @@ enum Commands {
 fn main() -> Result<()> {
     let cli = Cli::parse();
     
+    let modifiers = OutputModifiers {
+        group: cli.group,
+        oneline: cli.oneline,
+        count: cli.count,
+    };
+    
     match cli.command {
-        Commands::Added => list_added_files(),
-        Commands::Modified => list_modified_files(),
-        Commands::Unstaged => list_unstaged_files(),
-        Commands::BranchFiles { branch } => list_branch_files(&branch),
-        Commands::Group { oneline } => group_files(oneline),
+        Commands::Added => list_files("added", &modifiers),
+        Commands::Modified => list_files("modified", &modifiers),
+        Commands::Unstaged => list_files("unstaged", &modifiers),
+        Commands::BranchFiles { branch } => list_files(&format!("branch-files {}", branch), &modifiers),
+        Commands::Group { oneline } => {
+            // For backward compatibility, merge oneline flag with global modifiers
+            let mut group_modifiers = modifiers;
+            if oneline {
+                group_modifiers.oneline = true;
+            }
+            group_modifiers.group = true; // Group command always groups
+            list_files("unstaged", &group_modifiers)
+        },
         Commands::Diff { file_command } => diff_files(file_command.as_deref()),
         Commands::DiffStaged => diff_staged(),
         Commands::DiffFile { file } => diff_file(&file),

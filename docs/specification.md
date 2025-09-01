@@ -61,8 +61,86 @@ ginyu modified  # just shows: src/old.ts
 3. **Error Prevention**: No more accidentally running tools on wrong files
 4. **Team Consistency**: Standardized commands across projects and developers
 5. **Development Speed**: 5-10x faster common operations
+6. **Command Composability**: Global modifiers work with any file command
 
 ## Core Features
+
+### Global Modifiers
+
+Global modifiers can be applied to any file listing command to transform or enhance the output.
+
+#### Group modifier
+```bash
+ginyu -g <file-command>
+# or
+ginyu --group <file-command>
+```
+
+Groups the output by file type instead of listing individual files.
+
+**Examples:**
+```bash
+# Group modified files by type
+ginyu -g modified
+# Output:
+# TypeScript (3): App.tsx, Button.tsx, utils.ts
+# CSS (1): styles.css
+
+# Group files in feature branch by type  
+ginyu -g branch-files main
+# Output:
+# JavaScript (2): component.js, helper.js
+# Markdown (1): README.md
+
+# Group added files with detailed view
+ginyu --group added
+# Output:
+# TypeScript:
+#   src/App.tsx
+#   src/utils.ts
+# CSS:
+#   styles.css
+```
+
+#### Oneline modifier
+```bash
+ginyu -1 <file-command>
+# or  
+ginyu --oneline <file-command>
+```
+
+Shows condensed single-line output. When combined with `-g`, shows oneline group format.
+
+**Examples:**
+```bash
+# Oneline list of modified files
+ginyu -1 modified
+# Output: App.tsx Button.tsx styles.css (3 files)
+
+# Oneline grouped output
+ginyu -g -1 branch-files main  
+# Output: TypeScript (2): App.tsx, utils.ts | CSS (1): styles.css
+```
+
+#### Count modifier
+```bash
+ginyu -c <file-command>
+# or
+ginyu --count <file-command>
+```
+
+Shows only the count of files.
+
+**Examples:**
+```bash
+# Count modified files
+ginyu -c modified
+# Output: 3
+
+# Count files by type
+ginyu -g -c added
+# Output: TypeScript: 2, CSS: 1, Total: 3
+```
 
 ### File Status Operations
 

@@ -3,78 +3,81 @@ use colored::Colorize;
 use std::process::Command;
 
 use crate::git::{GitRepo, group_files_by_type};
+use crate::OutputModifiers;
 
-pub fn list_added_files() -> Result<()> {
+pub fn list_files(file_command: &str, modifiers: &OutputModifiers) -> Result<()> {
     let repo = GitRepo::open()?;
-    let files = repo.get_added_files()?;
     
-    for file in files {
-        println!("{}", file);
-    }
+    let files = get_files_for_command(&repo, file_command)?;
     
-    Ok(())
-}
-
-pub fn list_modified_files() -> Result<()> {
-    let repo = GitRepo::open()?;
-    let files = repo.get_modified_files()?;
-    
-    for file in files {
-        println!("{}", file);
-    }
-    
-    Ok(())
-}
-
-pub fn list_unstaged_files() -> Result<()> {
-    let repo = GitRepo::open()?;
-    let files = repo.get_unstaged_files()?;
-    
-    for file in files {
-        println!("{}", file);
-    }
-    
-    Ok(())
-}
-
-pub fn list_branch_files(branch: &str) -> Result<()> {
-    let repo = GitRepo::open()?;
-    let files = repo.get_branch_files(branch)?;
-    
-    for file in files {
-        println!("{}", file);
-    }
-    
-    Ok(())
-}
-
-pub fn group_files(oneline: bool) -> Result<()> {
-    let repo = GitRepo::open()?;
-    let files = repo.get_unstaged_files()?;
-    let groups = group_files_by_type(&files);
-    
-    if oneline {
-        for (file_type, files) in groups {
-            let file_names: Vec<String> = files.iter()
-                .map(|f| std::path::Path::new(f).file_name().unwrap().to_string_lossy().to_string())
-                .collect();
-            println!("{} ({}): {}", 
-                file_type.bright_blue(), 
-                files.len(), 
-                file_names.join(", ")
-            );
-        }
-    } else {
-        for (file_type, files) in groups {
-            println!("{}:", file_type.bright_blue());
-            for file in files {
-                println!("  {}", file);
+    if modifiers.count {
+        if modifiers.group {
+            let groups = group_files_by_type(&files);
+            let mut total = 0;
+            for (file_type, files) in &groups {
+                println!("{}: {}", file_type, files.len());
+                total += files.len();
             }
-            println!();
+            println!("Total: {}", total);
+        } else {
+            println!("{}", files.len());
+        }
+    } else if modifiers.group {
+        let groups = group_files_by_type(&files);
+        
+        if modifiers.oneline {
+            let group_strs: Vec<String> = groups.iter()
+                .map(|(file_type, files)| {
+                    let file_names: Vec<String> = files.iter()
+                        .map(|f| std::path::Path::new(f).file_name().unwrap().to_string_lossy().to_string())
+                        .collect();
+                    format!("{} ({}): {}", 
+                        file_type.bright_blue(), 
+                        files.len(), 
+                        file_names.join(", ")
+                    )
+                })
+                .collect();
+            println!("{}", group_strs.join(" | "));
+        } else {
+            for (file_type, files) in groups {
+                println!("{}:", file_type.bright_blue());
+                for file in files {
+                    println!("  {}", file);
+                }
+                println!();
+            }
+        }
+    } else if modifiers.oneline {
+        let file_names: Vec<String> = files.iter()
+            .map(|f| std::path::Path::new(f).file_name().unwrap().to_string_lossy().to_string())
+            .collect();
+        println!("{} ({} files)", file_names.join(" "), files.len());
+    } else {
+        for file in files {
+            println!("{}", file);
         }
     }
     
     Ok(())
+}
+
+fn get_files_for_command(repo: &GitRepo, file_command: &str) -> Result<Vec<String>> {
+    let parts: Vec<&str> = file_command.split_whitespace().collect();
+    
+    match parts.get(0) {
+        Some(&"added") => repo.get_added_files(),
+        Some(&"modified") => repo.get_modified_files(),
+        Some(&"unstaged") => repo.get_unstaged_files(),
+        Some(&"branch-files") => {
+            let branch = parts.get(1).unwrap_or(&"main");
+            repo.get_branch_files(branch)
+        },
+        _ => {
+            eprintln!("Unknown file command: {}", file_command);
+            Ok(vec![])
+        }
+    }
 }
 
 pub fn diff_files(file_command: Option<&str>) -> Result<()> {

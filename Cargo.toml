@@ -1,0 +1,23 @@
+[package]
+name = "ginyu"
+version = "0.1.0"
+edition = "2021"
+description = "A lightweight git CLI wrapper with intuitive aliases"
+license = "MIT"
+repository = "https://github.com/yourusername/ginyu"
+
+[[bin]]
+name = "ginyu"
+path = "src/main.rs"
+
+[dependencies]
+clap = { version = "4.4", features = ["derive", "color"] }
+git2 = "0.18"
+anyhow = "1.0"
+colored = "2.0"
+serde = { version = "1.0", features = ["derive"] }
+
+[dev-dependencies]
+tempfile = "3.8"
+assert_cmd = "2.0"
+predicates = "3.0"

@@ -264,3 +264,105 @@ fn test_run_tool_dry_run() {
         .stdout(predicate::str::contains("Running echo on 1 files"))
         .stdout(predicate::str::contains("test.js"));
 }
+
+#[test]
+fn test_group_modifier() {
+    let repo = TestRepo::new();
+    
+    repo.create_file("app.js", "console.log('hi')");
+    repo.create_file("test.rb", "puts 'test'");
+    repo.create_file("README.md", "# Test");
+    
+    let mut cmd = Command::cargo_bin("ginyu").unwrap();
+    cmd.args(["-g", "added"])
+        .current_dir(&repo.repo_path)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("JavaScript:"))
+        .stdout(predicate::str::contains("Ruby:"))
+        .stdout(predicate::str::contains("Markdown:"));
+}
+
+#[test]
+fn test_oneline_modifier() {
+    let repo = TestRepo::new();
+    
+    repo.create_file("app.js", "console.log('hi')");
+    repo.create_file("test.rb", "puts 'test'");
+    
+    let mut cmd = Command::cargo_bin("ginyu").unwrap();
+    cmd.args(["-1", "added"])
+        .current_dir(&repo.repo_path)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("(2 files)"));
+}
+
+#[test]
+fn test_count_modifier() {
+    let repo = TestRepo::new();
+    
+    repo.create_file("app.js", "console.log('hi')");
+    repo.create_file("test.rb", "puts 'test'");
+    repo.create_file("main.py", "print('hello')");
+    
+    let mut cmd = Command::cargo_bin("ginyu").unwrap();
+    cmd.args(["-c", "added"])
+        .current_dir(&repo.repo_path)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("3"));
+}
+
+#[test]
+fn test_combined_modifiers() {
+    let repo = TestRepo::new();
+    
+    repo.create_file("app.js", "console.log('hi')");
+    repo.create_file("test.rb", "puts 'test'");
+    
+    // Test group + oneline
+    let mut cmd = Command::cargo_bin("ginyu").unwrap();
+    cmd.args(["-g", "-1", "added"])
+        .current_dir(&repo.repo_path)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("JavaScript (1):"))
+        .stdout(predicate::str::contains("Ruby (1):"));
+        
+    // Test group + count
+    let mut cmd = Command::cargo_bin("ginyu").unwrap();
+    cmd.args(["-g", "-c", "added"])
+        .current_dir(&repo.repo_path)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("JavaScript: 1"))
+        .stdout(predicate::str::contains("Ruby: 1"))
+        .stdout(predicate::str::contains("Total: 2"));
+}
+
+#[test]
+fn test_branch_files_with_group() {
+    let repo = TestRepo::new();
+    
+    // Create initial commit on main
+    repo.create_file("main_file.txt", "main content");
+    repo.add_file("main_file.txt");
+    repo.commit("Initial commit");
+    
+    // Create feature branch and add files
+    repo.create_branch("feature");
+    repo.create_file("app.js", "console.log('feature')");
+    repo.create_file("test.rb", "puts 'feature'");
+    repo.add_file("app.js");
+    repo.add_file("test.rb");
+    repo.commit("Add feature files");
+    
+    let mut cmd = Command::cargo_bin("ginyu").unwrap();
+    cmd.args(["-g", "bf", "main"])
+        .current_dir(&repo.repo_path)
+        .assert()
+        .success()
+        .stdout(predicate::str::contains("JavaScript:"))
+        .stdout(predicate::str::contains("Ruby:"));
+}

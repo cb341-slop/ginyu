@@ -35,19 +35,19 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// Show added but not staged files
-    #[command(alias = "a", visible_alias = "a")]
+    #[command(visible_alias = "a")]
     Added,
     
     /// Show modified but not staged files
-    #[command(alias = "m", visible_alias = "m")]
+    #[command(visible_alias = "m")]
     Modified,
     
     /// Show all unstaged files
-    #[command(alias = "u", visible_alias = "u")]
+    #[command(visible_alias = "u")]
     Unstaged,
     
     /// Show files different from branch
-    #[command(alias = "bf", visible_alias = "bf")]
+    #[command(visible_alias = "bf")]
     BranchFiles {
         /// Target branch to compare against
         #[arg(default_value = "main")]
@@ -55,7 +55,7 @@ enum Commands {
     },
     
     /// Group files by type
-    #[command(alias = "g", visible_alias = "g")]
+    #[command(visible_alias = "g")]
     Group {
         /// Show condensed oneline format
         #[arg(long)]
@@ -63,25 +63,25 @@ enum Commands {
     },
     
     /// Show diff for file set
-    #[command(alias = "d", visible_alias = "d")]
+    #[command(visible_alias = "d")]
     Diff {
         /// File command to diff (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Show diff of staged files
-    #[command(alias = "ds", visible_alias = "ds")]
+    #[command(visible_alias = "ds")]
     DiffStaged,
     
     /// Show diff for specific file
-    #[command(alias = "df", visible_alias = "df")]
+    #[command(visible_alias = "df")]
     DiffFile {
         /// File path to diff
         file: String,
     },
     
     /// Run tool on file set
-    #[command(alias = "r", visible_alias = "r")]
+    #[command(visible_alias = "r")]
     Run {
         /// Tool to run
         tool: String,
@@ -90,35 +90,35 @@ enum Commands {
     },
     
     /// Run prettier on file set
-    #[command(alias = "p", visible_alias = "p")]
+    #[command(visible_alias = "p")]
     Prettier {
         /// File command (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Run formatter on file set
-    #[command(alias = "f", visible_alias = "f")]
+    #[command(visible_alias = "f")]
     Format {
         /// File command (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Run linter on file set
-    #[command(alias = "l", visible_alias = "l")]
+    #[command(visible_alias = "l")]
     Lint {
         /// File command (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Run rubocop on file set
-    #[command(alias = "rb", visible_alias = "rb")]
+    #[command(visible_alias = "rb")]
     Rubocop {
         /// File command (added, modified, etc.)
         file_command: Option<String>,
     },
     
     /// Run eslint on file set
-    #[command(alias = "es", visible_alias = "es")]
+    #[command(visible_alias = "es")]
     Eslint {
         /// File command (added, modified, etc.)
         file_command: Option<String>,

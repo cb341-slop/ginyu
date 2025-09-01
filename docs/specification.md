@@ -119,7 +119,9 @@ ginyu -1 modified
 
 # Oneline grouped output
 ginyu -g -1 branch-files main  
-# Output: TypeScript (2): App.tsx, utils.ts | CSS (1): styles.css
+# Output: 
+# CSS (1): styles.css
+# TypeScript (2): App.tsx utils.ts
 ```
 
 #### Count modifier
@@ -339,11 +341,11 @@ Running prettier on modified files...
 src/App.tsx
 package.json
 
-# Run rubocop on added files
-$ ginyu run rubocop added
-Running rubocop on added files...
-lib/user.rb
-spec/user_spec.rb
+# Run erb_lint on added files (auto-filters to .erb files only)
+$ ginyu run erb_lint added
+Running erb_lint on 2 files...
+app/views/posts/show.html.erb
+app/views/layouts/application.html.erb
 
 # Run eslint on all files in feature branch
 $ ginyu run eslint branch-files main
@@ -351,12 +353,19 @@ Running eslint on files different from main...
 src/components/NewFeature.tsx
 src/hooks/useFeature.ts
 
-# Run prettier on all unstaged files (default)
+# Run erb_lint on specific file type
+$ ginyu run erb_lint ERB
+Running erb_lint on 3 files...
+app/views/posts/show.html.erb
+app/views/posts/index.html.erb
+app/views/layouts/application.html.erb
+
+# Run prettier on all unstaged files (default, auto-filters)
 $ ginyu run prettier
-Running prettier on unstaged files...
+Running prettier on applicable files...
 src/App.tsx
 package.json
-lib/user.rb
+styles.css
 ```
 
 #### Tool shortcuts
